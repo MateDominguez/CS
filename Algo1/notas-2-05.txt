@@ -1,0 +1,30 @@
+-tipo de dato: conjunto de valores con un conjunto de operaciones asignado
+-variables de tipo, se usan para definir polimorfismos, funciones que son validas para + de 1 tipo de dato
+-clases de tipos: conjuntos de tipos de datos que comparten operaciones
+
+-programa funcional: conjunto de funciones
+-ecuacion orientada: ecuaciones donde importa el orden de escritura
+-pattern matching: es una forma de definir ecuaciones orientadas, a travez de valores o constructores a la izquierda del igual (como en listas). Hace falta conocer la estructura algebraica del dato
+-reduccion: orden en el que se evaluan las -----?
+transperencia referencial: cuando una funcion depende exclusivamente de sus argumentos. Caracteristica del paradigma funcional
+
+Modularizacion: Descomponer un problema grande en problemas mas pequenios
+Bottom up
+Top down
+
+-subespecificacion: requiere mas estrictos de los solicitados / asegura mas laxos que los solicitados
+-sobreespecificacion: requiere mas laxos / asegura mas estrictos
+
+un programa satisface su contrato si: cuando los datos de entrada cumplen los requiere, el programa cumple los asegura
+
+Testing: ejecutar el programa, diseniar los casos, probarlos. Objetivo: encontrar errores (?
+Test caja negra: No se puede ver el codigo. Sirven para que se te ocurran casos de test
+Test caja blanca: Se puede ver el codigo
+
+Falla: no anda como se espera
+Defecto: porque/donde falla
+Error: lo que origina el defecto
+
+Estructura de datos: Formas de organizar los datos, permite definir nuevos tipos de datos. Sirve para modelar
+Modelo: Abstraccion del problema real para poder trabajar sobre el
+
