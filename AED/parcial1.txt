@@ -1,0 +1,346 @@
+`/// 25-11-2023 
+// E1
+/ b
+Socio es String
+|Socio| <= 50
+L = librosColeccion
+r = cantRetiradosSocio
+k = cantLibres
+
+Modulo BibliotecaImpl implementa Biblioteca {
+  var librosSocio: DiccionarioDigital<Socio, ConjuntoLog<idLibro>>
+  var estanteria: DiccionarioLog<idLibro, Posicion>
+  var espaciosLibres: ColaDePrioridadLog<Posicion>
+
+  proc AgregarLibroAlCatalogo(inout b: BibliotecaImpl, in l: idLibro) { 
+    // O(log L + log k)
+    if (b.espaciosLibres.tamano() == 0) { // O(1)
+      b.estanteria.definir(l, b.estanteria.tamano) // O(log L)
+    } else {
+      b.estanteria.definir(l, b.espaciosLibres.desencolarMax()) // O(log L + log k)
+    }
+  }
+
+  proc PedirLibro(inout b: BibliotecaImpl, in l: idLibro, in s: Socio) {
+    // O(log L + log k + log r)
+    b.espaciosLibres.encolar(b.estanteria.obtener(l)) // O(log k + log L)
+    b.estanteria.borrar(l) // O(log L)
+    if (b.librosSocio.esta(s)) { // O(1)
+      b.librosSocio.definir(s, b.librosSocio.obtener(s).agregar(l)) // O(log r)
+    } else {
+      var libros: ConjuntoLog<idLibro>
+      libros = libros.conjVacio()
+      b.librosSocio.definir(s, libros.agregar(l)) // O(log k)
+    }
+  }
+
+  proc DevolverLibro(inout b: BibliotecaImpl, in l: idLibro, in s: Socio) { 
+    // O(log L + log r + log k)
+    b.estanteria.definir(l, b.espaciosLibres.desencolarMax()) // O(log L + log k)
+    b.librosSocio.definir(s, b.librosSocio.obtener(s).sacar(l)) // O(log r)
+  }
+
+  proc Prestados(in b: BibliotecaImpl, in s: Socio): ConjuntoLog<idLibro> { // O(1)
+    return b.librosSocio.obtener(s) // O(1)
+  }
+
+  proc UbicacionDelLibro(in b: BibliotecaImpl, in l: idLibro): Posicion { // O(log L)
+    return b.estanteria.obtener(l) // O(log L)
+  }
+}
+
+/ a
+Guardo los libros en un DiccionarioLog<idLibro, Posicion> ya que necesito saber que
+posicion se libero cuando se presta un libro. Agregar o eliminar un libro es O(log L).
+
+Como el nombre de los socios esta acotado uso un 
+DiccionarioDigital<Socio, ConjuntoLog<idLibro>> ya que las operaciones sobre el diccionario
+se vuelven O(1). Agregar o eliminar un elemento del conjunto de libros que tiene el socio
+es O(log r).
+
+Por ultimo, guardo las posiciones que se liberal a medida que presto libros en una 
+ColaDePrioridadLog<Posicion>, que es un min-heap y obtener el minimo, es decir la
+primera posicionlibre, en O(1). Agregar una posicion es O(log k)
+
+Cuando agrego un libro, lo guardo junto con la posicion en "estanteria", si no hay
+posiciones libres, lo guardo en la ultima posicion, si hay alguna posicion libre, lo
+guardo en la primera, esta posicion lo obtengo de "espaciosLibres"
+Cuando pido un libro, lo agrego al conjunto de libros del socio "librosSocio", ademas 
+agrego la posicion que se libero a "espaciosLibres" 
+
+sacame del bolsillo
+
+/// 
+// E1
+/ a
+Agregar seria O(1) pues simplemente agrego el elemento al final.
+Pertenece es O(n) donde n es la cantidad total de elementos que agregue. Recorro
+toda la lista y devuelvo true cuando me tope con la primera aparicion del elemento.
+Sacar es O(n + k) donde k es la cantidad de apariciones del elemento, pues tengo que
+recorrer toda la lista y eliminar todas las apariciones del elemento,eliminar un
+elemento es O(1). Sacar termina siendo O(n) pues k siempre sera menor o igual que n.
+
+Sacar: Creo una variable que guarde el nodo de la lista enlazada anterior al actual y 
+lo actualizo cada vez que me muevo una posicion. Recorro la lista desde el principio y
+me voy moviendo de a un elemento, me fijo si el elemento actual es el que quiero eliminar,
+si es asi, hago que el siguiente del elemento anterior sea el siguiente del actual. 
+Si el elemento actual no es el que quiero eliminar, avanzo al siguiente. Repito el 
+procedimiento hasta llegar al final de la lista.
+
+/ b.1
+Falso. Sea Tpeor = n. n E O(n) && n E O(n^2) pues
+
+Existe n0,k > 0 tq n <= k.N
+n0 = 1, k = 1
+
+Existe n0,k > 0 tq n <= k.n^2
+n0 = 1 , k = 1 
+
+/ b.2 y b.3 los hice en papel
+
+// E2
+/ a
+un algoritmo de ordenamiento es estable si al finalizar la ejecucion del mismo,
+elementos con el mismo valor de orden segun el criterio de ordenamiento, estos
+mantienen su orden relativo respecto al array original.
+
+Ejemplo:
+A = [2*,1,2']
+algoritmoOrdenamientoEstable(A) -> A = [1,2*,2']
+algoritmoOrdenamientoNoEstable(A) -> A = [1,2',2*]
+
+/ b
+heapSort no es estable porque hace permutaciones de elementos no adyacentes, si hay 
+un elemento del mismo tipo entre los dos permutados, se invierte el orden.
+
+Ejemplo:
+A = [2*,1,2']
+
+Primero hace un min-heap con los elementos y despues va sacando el maximo y lo agrega
+a un array, quedando asi ordenado
+     1            ->     2'           ->       2*           ->
+  2'    2*                  2*
+
+  A* = []               A* = [1]              A* = [1,2']          A* = [1,2',2*]
+
+A* es A ordenado pero no mantuvo el orden relativo de los elementos del mismo tipo
+
+/ c
+n = s.length
+proc OrdenarSegunCriterio(in s: Array<int>, in crit: Array<int>): Array<int> {
+  var critConj: ConjuntoLog<int>
+
+  var i: int
+  i = 0
+  while (i < crit.length) { // O(n log n)
+    critConj.agregar(crit[i])
+  }
+
+  var A: ListaEnlazada<int>
+  A = A.listaVacia()
+  var B: ListaEnlazada<int>
+  A = B.listaVacia()
+
+  i = 0
+  while (i < s.length) { // O(n log n)
+    if (critConj.pertenece(s[i]))  {
+      A.agregarAtras(s[i])
+    } else {
+      B.agregarAtras(s[i])
+    }
+  }
+
+  var A: Array<int>
+  var B: Array<int>
+
+  A = list2Array(A)
+  B = list2Array(B)
+
+  bucketSort(A, crit) // O(n + k) = O(n)
+  mergeSort(B) // O(n log n)
+
+  var res: Array<int>
+  res = new Array[s.length]
+
+  i = 0 
+  while (i < A.length) { // O(n)
+    res[i] = A[i]
+  }
+
+  i = 0
+  while (i < B.length) { // O(n)
+    res[i + A.length] = B[i]
+  }
+
+  return res
+}
+
+// E3
+/ a
+|tarjeta| <= 20
+t = cantTarjetas
+m = cantMarcas
+tarjeta es String
+marca es int
+gasto es int
+credito es bool
+
+Modulo BilleteraDigitalImpl implementa BilleteraDigital {
+  var tarjMarca: DiccionarioLog<marca, ConjuntoLog<tarjeta>>
+  var tarjCompras: DiccionarioDigital<tarjeta, ListaEnlazada<monto>>
+  var tarjCredito: ConjuntoLog<tarjeta>
+}
+
+CrearCuenta: crea los diccionarios y el conjunto vacios O(1).
+
+RegistrarTarjeta: Agrego la tarjeta al conjunto de tarjetas O(log t) de la marca en
+"tarjMarca" O(log m). Agrego la tarjeta como clave en "tarjCompras" con una 
+ListaEnlazada vacia como valor O(log t). Si la tarjeta es de credito, la agrego
+a "tarjCredito" O(log t). (log t + log m)
+
+RegistrarCompra: Agrego el monto a la ListaEnlazada O(1) de la tarjeta en 
+"tarjCompras" O(1). O(1)
+
+TarjetasDeMarca: Devuelve el conjunto asociado a la marca en "tarjMarca" O(log m)
+
+TarjetasDeCredito: Devuelve "tarjCredito" O(1)
+
+/ b
+InvRep: Toda tarjeta en "tarjCredito" es clave de "tarjCompras". Toda tarjeta que
+pertenece a un conjunto de alguna marca de "tarjMarca" tiene que ser clave de 
+"tarjCompras". Los tamanos de "tarjCredito" y de "tarjMarca" son menores o iguales
+a tamano de "tarjCompras". Los montos de listaEnlazada de "tarjCompras" son mayores
+a 0.
+
+/ c.1
+k = cantGastosSolicitados
+c = cantCompras
+
+Agregaria "var gastos: ColaDePrioridadLog<gasto>", max-heap, obtengo el maximo O(log c),
+lo agrego a un ConjuntoLog O(log c), como agrego k gastos, esto tiene un costo 
+de O(k log c).
+
+/ c.2
+InvRep: La suma de los tamanos de los conjuntos de montos de "tarjCompras" es igual
+al tamano de "gastos"
+
+///
+// E2
+0 <= Nota <= 10
+/ a
+InvRep: Un alumno esta en alumnos SII es clave de primerParcial SII es clave de 
+segundoParcial. Un alumno esta en aprobados SII ese alumno tiene un 6 o mas en 
+primerParcial y en segundoParcial. El tamano de aprobados es menor o igual a el tamano de
+alumnos.
+
+sea c Modulo y c' TAd 
+Abs: el tamano de c'.aprobados + el tamano de c'.reprobados = el tamano de c.alumnos.
+Para todo alumno en c'.calificaciones, su primera nota es la misma que en c.primerParcial
+y su segunda nota es la misma que en c.segundoParcial.
+para todo alumno en c.primerParcial/c.segundoParcial, su nota es la misma que en 
+c'.calificaciones[0]/[1]
+
+/ b
+pred InvRep(in c: MateriaImpl) {
+  (PT a: Alumno)(a E c.alumnos <-> a E c.primerParcial <-> a E c.segundoParcial) &&
+  (PT a: Alumno)(a E c.aprobados ->l c.primerParcial[a] > 6 && c.segundoParcial[a] > 6) &&
+  (PT a: Alumno)(a E c.alumnos &&l c.primerParcial[a] > 6 && c.segundoParcial[a] > 6
+  -> a E c.aprobados) &&
+  (PT a: Alumno)(a E c.aprobados ->l a E c.alumnos) && |c.aprobados| <= |c.alumnos| &&
+  (PT a: Alumno)(a E c.alumnos ->l 0 <= c.primerParcial[a] <= 10 && 
+  0 <= c.segundoParcial[a] <= 10)
+}
+
+pred Abs(in c: MateriaImpl, in c': Materia) {
+  |c'.aprobados| + |c'.reprobados| = |c.alumnos| && c'.aprobados = c.aprobados &&
+  (PT a: Alumno)(a E c.alumnos && a !E c.aprobados -> a E c'.reprobados) &&
+  (PT a: Alumno)(a E c'.calificaciones -> a E c.primerParcial && a E c.segundoParcial) &&
+  (PT a: Alumno)(a E c.primerParcial || a E c.segundoParcial -> a E c'.calificaciones) &&
+  (PT a: Alumno)(a E c'.calificaciones -> c'.calificaciones[a][0] = c.primerParcial[a] &&
+  c'.calificaciones[a][1] = c.segundoParcial[a])
+}
+
+// E3
+|sensor| <=64
+tiempo es int > 0
+valor es int > 0
+
+O(n log n)
+n = cantMediciones
+
+/ a
+MasContaminados(in a: Array<struct<sensor: string, in t: int, in v: int>>, in k: int): Array<string> {
+
+  mergeSort(a) 
+  // Ordeno de manera descendente segun t, O(n log n). De esta manera tengo primero las ultimas
+  // mediciones de cada sensor
+
+  var aDicc: DiccionarioDigital<sensor, ListaEnlazada<struct<t: int, v: int>>>
+  
+  var i: int
+  i = 0
+  while (i < a.length) { // O(n)
+      var datos: struct<t: int, v: int>
+      datos.v = a[i].v
+      datos.t = a[i].t
+    if (aDicc.esta(a[i].sensor)) {
+      aDicc.definir(a[i].sensor, aDicc.obtener(a[i].sensor).agregarAtras(datos))
+    } else {
+      var mediciones: ListaEnlazada<<struct<t: int, v: int>>
+      mediciones = mediciones.listaVacia()
+      aDicc.definir(a[i].sensor, mediciones.agregarAtras(datos))
+    }
+  }   
+
+  var kMediciones: Array<struct<sensor: string, in t: int, in v: int>>
+  kMediciones = new Array[aDicc.tamano()]
+
+  var diccIt: iterador
+  it = aDicc.iterador()
+  var listIt: Iterador
+  i = 0
+  while (diccIt.haySiguiente()) { 
+  // O(l.m). l = cantSensores = , m = cant. max de mediciones para un sensor
+  // En el peor caso de m, todas las mediciones son de un solo sensor, m = a.length, l = 1
+  // En el peor caso de l, todas las sensores con una medicion, l = a.length, m = 1
+  // Por lo que el costo amortizado es O(n)
+
+    var sensorLista: struct<s: sensor, l: ListaEnlazada<struct<t: int, v: int>
+    sensorLista = diccIt.siguiente()
+    listIt = sensorLista.l.iterador()
+
+    var medicionMasReciente: int
+    medicionMasReciente = sensorLista.l.primero.t // el t del primer elem de la lista es el mas grande
+
+    var contaminacionAcumulada: int
+    contaminacionAcumulada = 0
+
+    var j: int
+    j = 0
+    var kMedicion: struct<t: int, v: int>
+    while (i < k && listIt.haySiguiente) { // O(m) , m = cant. max de mediciones de un sensor
+      kMedicion = listIt.siguiente()
+      contaminacionAcumulada += kMedicion.v
+    }
+
+    kMediciones[i] = <sensorLista.sensor, medicionMasReciente, contaminacionAcumulada>
+    i++
+  }
+
+  mergeSort(kMediciones) 
+  // Ordeno en orden descente segun v, desempato en orden descente segun t. O(n log n)
+
+  var res: Array<string>
+  res = new Array[k]
+
+  i = 0
+  while (i < k) { // O(n)
+    res[i] = kMediciones[i].sensor
+  }
+
+  return res
+}
+
+/ b
+El mejor caso y peor caso para el algoritmo es O(n log n), pues mergeSort tiene mejor 
+y peor caso O(n log n). La cota de complejidad mas ajustada es Θ(n log n).

@@ -1,0 +1,414 @@
+Guia 8 - Rep/Abs y Eleccion de Estructuras
+
+/// Invariante de representacion y funcion de abstraccion en modelado de problemas
+// Ejercicio 1
+
+Producto es String
+Monto es Z
+Fecha es Z (segundos desde 1/1/1970)
+
+TAD Comercio {
+  obs ventasPorProducto: dict<Producto, seq<tupla<Fecha, Monto>>>
+}
+
+Modulo ComercioImpl implementa Comercio {
+  var ventas: SecuenciaImpl<tripla<Producto, Fecha, Monto>>;
+  var totalPorProducto: DiccionarioImpl<Producto, Monto>;
+  var ultimoPrecio: DiccionarioImpl<Producto, Monto>;
+}
+
+Invrep: Todo Producto en ventas, tiene que ser clave de totalPorProducto y ultimoPrecio.
+El Monto asociado a un Producto en totalPorProducto, es la suma de los Montos asociados de
+todas las apariciones del mismo producto en ventas.
+El Monto asociado a un Producto en ultimoPrecio, es el Monto asociado a ese mismo Producto
+en ventas con la mayor Fecha asociada. 
+
+pred invRep(in c: ComercioImpl) {
+  (PT p: Producto)(PT i: Z)(0 <= i < |c.ventas| &&l p = c.ventas[i].1 ->l p E totalPorProducto 
+  && p E ultimoPrecio) &&l
+  (PT p: Producto)(PT i: Z)(0 <= i < |c.ventas| &&l p = c.ventas[i].1 ->l 
+  totalPorProducto[p] = sumaMontoProdcto(c, p)) &&
+  (PT p: Producto)(PT i,j: Z)(0 <= i, j < |c.ventas| && i != j &&l p = c.ventas[i].1 && 
+  p = c.ventas[j].1 && c.ventas[i].2 > c.ventas[j].2 ->l ultimoPrecio[p] = c.ventas[i].3)
+}
+
+Abs: Todo Producto en ventas, totalPorProducto y ultimoPrecio es clave de ventasPorProducto.
+Todo Producto que es clave de ventasPorProducto, es clave de totalPorProducto, ultimoPrecio,
+y pertenece a alguna tupla de ventas.
+De todas las tuplas asociadas a un Producto en ventasPorProducto, el monto asociado a ese mismo
+Producto en ultimoPrecio es el de la tupla que tiene la Fecha mas grande.
+El Monto asociada a un Producto en totalPorProducto es igual a la suma de los Montos de 
+todas las tuplas asociadas a ese mismo Producto en ventasPorProducto.
+
+pred Abs(in c: ComercioImpl, in c': Comercio) {
+  (PT p: Producto)(PT i : Z)(p E c'.ventasPorProducto &&l 0 <= i < |c'.ventasPorProducto[p]| ->l
+  (E t: Tupla)(t E c.ventas && t.1 = p && t.2 = c'.ventasPorProducto[i].1 && 
+  t.3 = c'.ventasPorProducto[i].2)) &&
+  (PT t: Tupla)(t E c.ventas -> (E p: Producto)(p E c'.ventasPorProducto &&
+  c'.ventasPorProducto[p].1 = t.2 && c'.ventasPorProducto[p].2) = t.3)
+}
+
+// Ejercicio 2
+TAD Planta {
+  obs alarmas: conj⟨Alarma⟩
+  obs sensores: conj⟨⟨Sensor, Alarma⟩⟩
+
+  proc nuevaPlanta () : Planta {
+    asegura {res.alarmas = {}}
+    asegura {res.sensores = {}}
+  }
+  proc agregarAlarma (inout p : Planta, in a : Alarma) {
+    requiere {p = P0}
+    requiere {a ~∈ p.alarmas}
+    asegura {p.alarmas = P0.alarmas ∪ {a}}
+    asegura {p.sensores = P0.sensores}
+  }
+  proc agregarSensor (inout p : Planta, in a : Alarma, in s : Sensor) {
+    requiere {p = P0}
+    requiere {a ∈ p.alarmas}
+    requiere {⟨s, a⟩ ~∈ p.sensores}
+    asegura {p.alarmas = P0.alarmas}
+    asegura {p.sensores = P0.sensores + {⟨s, a⟩}}
+  }
+}
+
+Modulo PlantaImpl implementa Planta <
+var alarmas: Diccionario<Alarma, Conjunto<Sensor>>
+var sensores: Diccionario<Sensor, Conjunto<Alarma>>
+>
+
+InvRep: Toda alarma que pertenezca al conjunto de alarmas de algun sensor del diccionario de
+sensores tiene que ser clave del diccionario de alarmas y ademas tiene que tener a ese sensor
+en su conjunto de sensores
+Todo sensor que pertenezca al conjunto de sensores de alguna alarma del diccionario de alarmas
+tiene que ser clave del diccionario de sensores y ademas tiene que tener a esa alarma en su
+conjunto de alarmas.
+
+pred InvrRep(in p: PlantaImpl) {
+  (PT s: Sensor)(PT a: Alarma)(s E p.sensores && a C p.sensores[s] ->l a E p.alarmas &&
+  s C p.alarmas[a]) &&
+  (PT s: Sensor)(PT a: Alarma)(a E p.alarmas && s C p.alarmas[a] ->l s E p.sensores &&
+  a C p.sensores[s] && |p.sensores[s]| > 0)
+}
+
+pred Abs(in p: PlantaImpl, in p': Planta) {
+  (PT a: Alarma)(a E p.alarmas SII a C p'.alarmas) &&
+  (PT s: Sensor)(PT a: alarma)(s E p.sensores && a C p.sensores[s] ->l 
+  (E t: Tupla<Sensor,Alarma>)(t.1 = s && t.2 = a && t C p'.sensores)) &&
+  (PT t: Tupla<Sensor,Alarma>)(t C p'.sensores ->l t.1 E t.sensores && t.2 C t.sensores[t.1])
+}
+
+// Ejercicio 3
+Estudiante ES int
+TAD Secundario {
+  obs estudiantes: conj⟨Estudiante⟩
+  obs faltas: dict⟨Estudiante,Z⟩
+  obs notas: dict⟨Estudiante, seq⟨Z⟩⟩
+
+  proc NuevoSecundario (in es: conj⟨Estudiante⟩) : Secundario {
+    requiere {|es| > 0}
+    asegura {res.estudiantes = es}
+    asegura {(∀e : Estudiante)(e ∈ es →L e ∈ res.faltas ∧L res.faltas[e] = 0)}
+    asegura {(∀e : Estudiante)(e ∈ es → e ∈ res.notas ∧L res.notas[e] = ⟨⟩)}
+  }
+  proc RegistrarNota (inout s: Secundario, in e: Estudiante, in nota: Z) {
+    requiere {s = S0}
+    requiere {e ∈ s.estudiantes}
+    requiere {0 ≤ nota ≤ 10}
+    asegura {s.estudiantes = S0.estudiantes}
+    asegura {s.f altas = S0.faltas}
+    asegura {s.notas = setKey(S0.notas, e, S0.notas[e] + [nota])}
+  }
+  proc RegistrarFalta (inout s: Secundario, in e: Estudiante) {
+    requiere {s = S0}
+    requiere {e ∈ s.estudiantes}
+    asegura {s.alumnos = S0.alumnos}
+    asegura {s.f altas = setKey(S0.f altas, e, old(s).faltas[e] + 1)}
+    asegura {s.notas = S0.notas}
+  }
+}
+
+Modulo SecundarioImpl implementa Secundario <
+  var estudiantes: Conjunto<Estudiante>
+  var faltas: Diccionario<Estudiante, int>
+  var notas: Array<Conj<Estudiante>>
+  var notasPorEstudiante: Diccionario<Estudiante, Array<int>>
+>
+
+InvRep: Todo Estudiante que esta en estudiantes o es clave de faltas O
+es clave de notasPorEstudiante o esta en algun conjunto de notas, entonces esta en Estudiantes,
+es clave de faltas y es clave de notasPorEstudiante.
+El tamano de notas es 11. Todo array en notasPorEstudiante tiene tamano 11.
+Para cada Estudiante en una posicion de notas, en notasPorEstudiante en esa misma posicion 
+ese alumno tiene una cantidad de notas mayor a 0.
+El numero de faltas en faltas son mayores o iguales a 0. los valores del array de 
+notasPorEstudiante son mayores o iguales a 0.
+
+pred InvRep(in s: SecundarioImpl) {
+  |s.notas| = 11 &&
+
+  (PT e: Estudiante)(e C s.estudiantes || e E s.faltas || e E s.notasPorEstudiante || 
+  (E i : Z)(0 <= i < |s.notas| && e C s.notas[i]) ->l e C s.estudiantes && e E s.faltas &&
+  e E s.notasPorEstudiante) &&
+
+  (PT e: Estudiante)(e E s.notasPorEstudiante ->l |s.notasPorEstudiante[e]| = 11) &&
+
+  (PT e: Estudiante)(PT i: Z)(e E s.notasPorEstudiante && 0 <= i < 11 &&l 
+  s.notasPorEstudiante[e][i] > 0 ->l e C s.notas[i]) &&
+
+  (PT e: Estudiante)(PT i: Z)(0 <= i < 11 &&l e C s.notas[i] ->l s.notasPorEstudiante[e][i] > 0) &&
+
+  (PT e: Estudiante)(e E s.faltas ->l s.faltas[e] >= 0) &&
+
+  (PT e: Estudiante)(PT i: Z)(e E s.notasPorEstudiante && 0 < i <= 11 ->l 
+  s.notasPorEstudiante[e] >= 0)
+}
+
+pred Abs(in s: SecundarioImpl, in s': Secundario) {
+  s.estudiantes = s'.estudiantes && s.faltas = s'.faltas && s.notasPorEstudiante = s'.notas
+}
+
+/// Eleccion de estructuras
+Cuando el enunciado diga “disene este modulo”, salvo que indique lo contrario, solo nos interesa:
+1. La estructura
+2. Su invariante de representacion y su funcion de abstraccion
+3. Las operaciones con sus parametros y su complejidad
+4. Los algoritmos correspondientes
+
+// Ejercicio 4
+TAD Sistema {
+  obs notas: dict⟨materia, dict⟨alumno,Z⟩⟩
+
+  proc nuevoSistema() : Sistema
+  proc registrarMateria(inout s : Sistema, in m : materia)
+  proc registrarNota(inout s : Sistema, in m : materia, in a : alumno, in n : nota)
+  proc notaDeAlumno(in s : Sistema, in a : alumno, m : materia) : nota
+  proc cantAlumnosConNota(in s : Sistema, in m : materia, n : nota) : Z
+  proc cantAlumnosAprobados(in s : Sistema, in m : materia) : Z
+}
+
+m = cantMaterias
+n = cantAlumnos
+
+Modulo SistemaImpl implementa Sistema {
+  var notasPorMateria : DiccionarioLog<Materia, Array<ConjuntoLog<Alumno>>>
+
+  proc nuevoSistema(): SistemaImpl { // O(1)
+    notasPorMateria = notasPorMateria.diccVacio() // O(1)
+  }
+
+  // Supongo que solo registro materias que no fueron registradas antes
+  proc registrarMateria(inout s: SistemaImpl, in m: Materia) { // O(log m)
+    var arrayNotas: Array // O(1)
+    arrayNotas = new Array[11]; // O(1)
+    var i: int // O(1)
+    i = 0 // O(1)
+    while (i < 11) { // O(log m)
+      var conjAlumnos: ConjuntoLog // O(1)
+      conjAlumnos = conjAlumnos.conjVacio() // O(1)
+      s.notasPorMateria.definir(materia, conjAlumnos) // O(log m)
+    }
+    
+  }
+
+  // Solo registro notas para materias registradas 
+  proc registrarNota(inout s: SistemaImpl, in m: Materia, in a: Alumno, in n: Nota) { // O(log m)
+    var conjAlumno: ConjuntoLog // O(1)
+    conjAlumno = conjAlumno.conjVacio() // O(1)
+    conjAlumno.agregar(a) // O(1) pues es vacio
+    s.notasPorMateria.obtener(m)[n].unir(s.notasPorMateria.obtener(m)[n], conjAlumno) // O(log m)
+  }
+
+  proc notaDeAlumno(in s: SistemaImpl, in a: Alumno, in m: Materia): int { // O(log n + log m)
+    var i: int // O(1)
+    i = 0 // O(1)
+    while (i < 11) { // O(log n + log m)
+      if (s.notasPorMateria.obtener(m)[i].pertenece(a)) { // O(log n + log m)
+        return i // O(1)
+      }
+    }
+  }
+
+  proc cantAlumnosConNota(in s: SistemaImpl, in m: Materia, in n: Nota): int { // O(log m)
+    return s.notasPorMateria.obtener(m)[n].tamano() // O(log m)
+  }
+
+  proc cantAlumnosAprobados(in s: SistemaImpl, in m: Materia): int { // O(log m)
+    return s.notasPorMateria.obtener(m)[7].tamano() + s.notasPorMateria.obtener(m)[8].tamano()
+    + s.notasPorMateria.obtener(m)[9].tamano() + s.notasPorMateria.obtener(m)[10].tamano() 
+    // O(log m)
+  }
+}
+
+pred InvRep(in s: SistemaImpl) {
+  (PT m: Materia)(m E s.notasPorMateria -> |s.notasPorMateria[m]| = 11)
+  (PT m: Materia)(PT i, j: Z)(PT a: Alumno)(m E s.notasPorMateria && 0 <= i < 11 && i != j 
+  && a C s.notasPorMateria[m][i] ->l a !C s.notasPorMateria[m][j])
+}
+
+pred Abs(in s: SistemaImpl, in s': Sistema) {
+  (PT m: Materia)(m E s'.notas SII m E s.notasPorMateria) &&l
+
+  (PT m: Materia)(PT a: Alumno)(m E s'.notas &&l a E s'.notas[m] ->l 
+  a C s.notasPorMateria[m][s'.notas[m][a]]) &&
+
+  (PT m: Materia)(PT i: Z)(PT a: Alumno)(m E s.notasPorMateria && 0 <= i < 11 &&l
+  a C s.notasPorMateria[m][i] ->l s'.notas[m][a] = i)
+}
+
+// Ejercicio 8
+TAD IngresosAlBanco {
+  obs totales: seq⟨Z⟩
+    proc nuevoIngresos () : IngresosAlBanco {
+    asegura {totalDia == []}
+  }
+  proc registrarNuevoDia (inout i: IngresosAlBanco, in cant: Z) {
+    requiere {cant ≥ 0}
+    asegura {i.totales == old(i).totales + [cant]}
+  }
+  proc cantDias (in i: IngresosAlBanco) : : Z {
+    asegura {res == |i.totales|}
+  }
+  proc cantPersonas (in i: IngresosAlBanco, in desde: Z, in hasta: Z) : Z {
+    requiere {0 ≤ desde ≤ hasta ≤ |i.totales|}
+    asegura {res = Sum(j=desde,hasta) i.totales[j]}
+  }
+}
+
+/ 1
+Modulo IngresosAlBancoImpl implementa IngresosAlBanco {
+  var ingresos: Vector<int>
+
+  proc nuevosIngresos(): IngresosAlBancoImpl {
+    ingresos = ingresos.vectorVacio()
+  }
+
+  proc registrarNuevoDia(inout i: IngresosAlBancoImpl, in cant: int) { // O(n) o O(1)
+    if (i.ingresos.vacio()) {
+      i.ingresos.agregarAtras(cant) // O(n) o O(1)
+    } else {
+      i.ingresos.agregarAtras(cant + i.ingresos.obtener(i.ingresos.longitud() - 1)) // O(n) o O(1)
+    }
+  }
+
+  proc cantDias(in i: IngresosAlBancoImpl): int { // O(1)
+    return i.ingresos.longitud()
+  }
+
+  proc cantPersonas(in i: IngresosAlBancoImpl, in desde: int, in hasta: int): int { // O(1)
+    if (desde = 0) {
+      return i.ingresos.obtener(hasta) 
+    } else {
+      return i.ingresos.obtener(hasta) - i.ingresos.obtener(desde - 1)
+    }
+  }
+
+/ 2
+El tamano de la estructura crece linealmente, pues ingresos.longitud() = dias que pasaron. O(n)
+
+/ 4
+  proc mediana(in i: IngresosAlBancoImpl): int {
+    int n = i.ingresos.longitud()
+    if(n mod 2 != 0) {
+      return (n+1)/2
+    } else {
+      return (n/2 + ((n/2)+1))/2
+    }
+  }
+
+}
+
+// Ejercicio 9
+Cliente es string
+TAD Maderera {
+  proc comprarUnListon (inout m: Maderera, in tamano: Z) {
+    // comprar en el aserradero un liston de un determinado tama˜no
+  }
+  proc venderUnListon (inout m: Maderera, in tamano: Z, in cli: Cliente, in f: Fecha) {
+    // vender un liston de un determinado tamano a un cliente particular en una fecha 
+    determinada
+  }
+  proc ventasACliente (in m: Maderera, in cli: Cliente) {
+    // devolver el conjunto de todas las ventas que se le hicieron a un cliente
+    // (para cada venta, se quiere saber la fecha y el tama˜no del list´on)
+  }
+}
+
+m = cantidadListones
+k = largoIdCliente = 10
+Fecha es int
+Tamano es int
+Corte es int
+
+Modulo MadereraImpl implementa Maderera {
+  var listones: ColaDePrioridadLog<int>
+  var ventas: DiccionarioDigital<Cliente,ListaEnlazada<Tupla<Fecha, Tamano>>>
+
+// Supongo que solo me pueden hacer compras menores o iguales a mi liston mas largo
+  proc venderUnListon(inout m: Maderera, in c: Corte, in cli: Cliente, in f: Fecha) {// O(log m)
+    m.listones.encolar(m.listones.desencolarMax(0) - c) // O(log m)
+    if (m.ventas.esta(cli)) { // O(k)
+      m.ventas.definir(cli, m.ventas.obtener(cli).agregarAtras(<f,c>)) // O(k)
+    } else {
+      var listaVentas: ListaEnlazada<Tupla<Fecha, Tamano>> // O(1)
+      listaVentas = listaVentas.listaVacia() // O(1)
+      m.ventas.definir(cli, listaVentas.agregarAtras(<f,c>)) // O(k)
+    }
+  }
+}
+
+// Ejercicio 11
+|Tag| <= 20
+Id's unicos
+d = cantDiasRegistrados
+a = cantActividades
+
+Modulo AgendaImpl implementa Agenda {
+  var actividadesId: DiccionarioLog<Id, Struct<dia: Dia, inicio: Hora, fin: Hora>>
+  var horaMasOcupadaDia: DiccionarioLog<Dia, Struct<maxAct: Hora, actPorHora: Array[int]>>
+  var actividadesTag: DiccionarioDigital<Tag, ConjuntoLineal<Id>>
+
+
+  proc registrarActividad(inout ag: AgendaImpl, in id: Id, in dia: Dia, in inicio: Hora, in fin: Hora) {
+    // O(log a + log d)
+    ag.actividadesId.definir(id, <dia,inicio,fin>) // O(log a)
+    if (ag.horaMasOcupadaDia.esta(dia)) { // O(log d)
+      Array[int] actPorHora = ag.horaMasOcupadaDia.obtener(dia).actPorHora[hora] // O(log d)
+      Hora horaMasOcupada =  ag.horaMasOcupadaDia.obtener(dia).maxAct // O(log d)
+      actPorHora[hora] = actPorHora[hora] + 1 // O(1)
+      if (actPorHora[hora] > actPorHora[horaMasOcupada]) { // O(1)
+        ag.horaMasOcupadaDia.definir(dia, <hora, actPorHora>) // O(log d)
+      }
+    } else {
+      Array[int] actPorHora = new Array[24] // Se inicializa en 0, O(1)
+      actPorHora[hora] = actPorHora[hora] + 1 // O(1)
+      ag.horaMasOcupadaDia.definir(dia, <hora, actPorHora>) // O(log d)
+    }
+  }
+
+  proc verActividad(in ag: AgendaImpl, in act: Id): Struct<dia: Dia, inicio: Hora, fin: Hora> {
+    // O(log a)
+    return ag.actividadesId.obtener(id) // O(log a)
+  }
+
+  proc agregarTag(inout ag: AgendaImpl, in id: Id, in t: Tag) {
+    // O(1)
+    if (ag.actividadesTag.esta(t)) { // O(k)
+      ag.actividadesTag.obtener(t).agregarRapido(id) // O(k)
+    } else {
+      ConjuntoLineal conjIds = new ConjuntoLineal // O(1)
+      conjIds.agregarRapido(id) // O(1)
+      a.actividadesTag.definir(t, conjIds) // O(k)
+    }
+  }
+
+  proc horaMasOcupada(in ag: AgendaImpl, in dia: Dia): Hora {
+    // O(log d)
+    return ag.horaMasOcupadaDia.obtener(dia).maxAct // O(log d)
+  }
+
+  proc actividadesPorTag(in ag: AgendaImpl, in t: Tag): ConjuntoLineal<Id> {
+    // O(1)
+    return ag.actividadesTag.obtener(t) // O(k)
+  }
+}

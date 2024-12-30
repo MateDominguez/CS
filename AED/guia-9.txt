@@ -1,0 +1,321 @@
+// Ejercicio 1
+peor caso = el arreglo a ordenar se encuentre perfectamente ordenado de manera 
+            inversa a la deseada
+
+Insertion Sort: O(n^2)
+Selection Sort: O(n^2)
+Quick Sort: O(n^2)
+Heap Sort: O(n log n)
+Merge Sort: O(n log n)
+Bucket Sort: O(n + k) + O(Sorting de bucket), k = cantidad de claves
+Counting Sort: O(n + k)
+Radix Sort: O(d(n+k)) , d = cantidad maxima de digitos
+
+// Ejercicio 2
+Un algoritmo es estable cuando tras ejecutarlo, elementos con el mismo valor de ordenamiento 
+mantienen su orden relativo.
+
+Heap Sort, prueba por contraejemplo, 
+Array a ordenar: A = [2*,1,2']
+Aplico el algoritmo de Floyd: A = [1,2*,2']
+Cambio de lugar A[0] con A[n-1], elimino A[0] del heap y lo agrego a mi array ordenado
+[1,2*,2'] -> [2',2*] -> [2*]   -> []
+Y el array Ordenado:
+[]          -> [1]   -> [1,2'] -> [1,2',2*]
+
+Tanto cuando se heapifica el array como cuando se aplica heap sort, existe la posibilidad
+de cambiar el orden relativo de los elementos
+
+// Ejercicio 3
+Utilizaria Insertion Sort ya que es el unico algoritmo de ordenamiento que mantiene el orden
+si una parte de la secuencia ya esta ordenada. 
+Primero se recorre s' y despues se comparan todos los elementos de s'' con todos los elementos
+de s'. Entonces tenemos una complejidad de O(s'.s'') + O(s')
+
+// Ejercicio 4
+proc kMasChicos(in arr: Array[T], in k: int): ListaEnlazada<T> {
+  ListaEnlazada<T> res = new ListaEnlazada
+  int i = 0
+  while (i < arr.lenth() && i < k) {
+    9
+  }
+}
+// terminar
+
+// 3.4.5.7
+
+// Ejercicio 10
+alumno es struct⟨nombre: string, turno: Turno, puntaje: N⟩
+donde Turno es enum{Manana, Noche} y puntaje es un N no mayor que 10.
+
+/ 1
+La complejidad de Bucket Sort es O(n + k), siendo k la cantidad de categorias
+proc ordenaPlantilla(inout p: Array[alumno]) {
+
+  criterio_1 = {0..10} // criterio_1.tamano() = 11
+  p = bucketSort(p, criterio_1) // ordenado por notas. Sea n = p.lenth. Es O(n) porque recorre  
+                                   todo p y la cantidad de buckets esta acotada por k = 11
+
+  criterio_2 = {Manana, Noche} // criterio_2.tamano() = 2
+  p = bucketSort(p, 2) // ordenado por turno. Es O(n) porque recorre recorre todo p y la cantidad
+                          de buckets esta acotada, k = 2
+  return p
+}
+
+/ 2
+Es exactamente lo mismo
+
+/ 3
+No contradice el teorema pues Bucket Sort no es un algoritmo de ordenamiento de comparacion
+
+// Ejercicio 11
+proc ordenarNaturales(inout A: Array[int]) {
+  int i = 0
+  int max = 0
+  while (i < n.lenth) { // O(n)
+    if (max < A[i]) {
+      max = A[i]
+    }
+    i++
+  }
+  A = countingSort(A, max) // sea n = a.lenth. La complejidad es O(n + max) ya que primero 
+                              recorre A contando las apariciones de cada elemento y por cada 
+                              apariciones suma 1 al arreglo de tamano max a la posicion, 
+                              luego recorre el arreglo de tamano max para volver a armar 
+                              el arreglo ordenado 
+
+  // La complejidad final es O(n) ya que sabemos que max es una constante acotada
+
+  return n
+}
+
+// Ejercicio 12
+n = D.length
+proc ordenarDatos(inout D: Array[int]) {
+  enum criterio_1 = {0...19,>19} // criterio_1.size() = 21
+  D = bucketSort(D, criterio_1)
+  // Bucket sort sin ordenar los buckets. O(n) para llenar los buckets + O(21) para armar el
+  array
+
+  enum criterio_2 = {20...40,<20 || >40} // criterio_2.size() = 21
+  D = bucketSort(D, criterio_2) 
+  // Bucket sort sin ordenar los buckets. O(n) para llenar los buckets + O(21) para armar el
+  array
+
+  enum criterio_3 = {<40,>40} // criterio_3.size() = 2
+  D = bucketSort(D, criterio_3) 
+  // Bucket sort ordenando los buckets con Insertion Sort. El bucket <40 ya esta ordenado 
+  entonces Insertion Sort tarda O(n) en ordenarlo. Sabemos ademas que en el bucket >40 hay 
+  sqrt(n) elementos desordenados, entonces Insertion Sort tarda O(sqrt(n)^2) = O(n) en 
+  ordenarlo. O(n) para llenar los buckets + O(n) para ordenar con Insertion Sort + O(2) para
+  armar
+
+  // O(3n) = O(n)
+}
+
+// Ejercicio 13
+n = T.length
+l = long max de String
+/ 1
+proc ordenarTuplas(inout T: Array[<int,String>]) {
+  T = mergeSort(T) 
+  // Ordeno T con Merge Sort por el valor de la primera componente. O(n log n)
+
+  T = radixSort(T,l)
+  // Ordeno T con Radix Sort comparando los string de la segunda componente. O(n*l)
+  Como Radix Sort es estable, y primero los acomodamos segun la primera componente, van a 
+  quedar acomodados segun los strings pero van a mantener el orden relativo de la primera.
+  
+  // O(n*l + n log n)
+}
+
+/ 2
+k = cota de naturales
+proc ordenarTuplas(inout T: Array[<int,String>]) {
+  enum criterio_1 = {0...k} // criterio_1.size()
+  T = bucketSort(T,criterio_1)
+  // Ordeno T con Bucket Sort por el valor de la primera componente. O(n + k) = O(n)
+
+  T = radixSort(T,l)
+  // Ordeno T con Radix Sort comparando los string de la segunda componente. O(n*l)
+  Como Radix Sort es estable, y primero los acomodamos segun la primera componente, van a 
+  quedar acomodados segun los strings pero van a mantener el orden relativo de la primera.
+  
+  // Supongo l > 0, caso contrario no se pueden comparar
+  // O(n*l + n) = O(n)
+}
+
+// Ejercicio 14
+n = A.length 
+proc ordenarMultiplos(in A: Array<int>, in k: int): Array<int> {
+  var B: Array<int>
+  B = new Array[A.length*k]
+
+  A = mergeSort(A) // O(n log n)
+
+  var i,j: int
+  i = 0
+  while (i < A.length) { // O(nk)
+    j = 1
+    while (j <= k) {
+      B[i + j - 1] = A[i]*j
+      j++
+    }
+    i++
+  }
+}
+//sin terminar
+
+// Ejercicio 16
+/ 1
+proc ordenar1(inout A: Array<int>) {
+  var n: int
+  n = A.length
+  A = countingSort(A,n) // O(n + n) = O(n)
+}
+
+/ 2
+proc ordenar2(inout A: Array<int>) {
+  // si tomo base n, los numeros entre 0 y n^2 tienen a lo sumo dos digitos
+  int n = A.length
+  int base = n
+
+  int i = 0
+  while (i < n) { // O(n)
+    A[i] = cambioBase(A[i], base, 2) // O(1)
+  }
+  
+  A = radixSort(A,2) // O(n)
+}
+
+/ 3
+proc ordenar3(inout A: Array<int>) {
+  // si tomo base n, los numeros entre 0 y n^k tienen a lo sumo k digitos
+  int n = A.length
+  int base = n
+
+  int i = 0
+  while (i < n) { // O(nk)
+    A[i] = cambioBase(A[i], base, k) // O(k) pues para el cambio de base hago k divisiones
+  }
+  
+  A = radixSort(A,k) // O(nk)
+}
+
+/ 4
+La complejidad es O(nk) con k = log_n(max) por lo tanto, si max es muy grande, la 
+complejidad dejaria de ser lineal
+
+// Ejercicio 17
+Quiero O(n +h log h)
+n = s.longitud
+h = u.tamano
+k = 100
+
+Suposiciones:
+- usos es DiccionarioDigital
+- hay informacion de stock de todas las plantas
+- los algoritmos de ordenamiento son de tipo inout y 
+devuelven el array de entrada ordenado
+
+proc Recolectar(in s:Vector<tupla<string,int>>, in u:Diccionario<string,int>):Vector<string> {
+  
+  var stockDicc: DiccionarioDigital<string,int>
+  stockDicc := new diccionarioVacio()
+
+  var i: int
+  i := 0
+  while (i < s.longitud) { O(n)
+    var planta: String
+    planta = s.obtener(i)[0] // O(1)
+    var cant: int
+    cant = s.obtener(i)[1] // O(1)
+    if (stockDicc.esta(planta)) { // O(k) = O(1)
+      stockDicc.definir(planta, stockDicc.obtener(planta) + cant)// O(1)
+    } else {
+      stockDicc.definir(planta, cant) // O(1)
+    }
+    i++
+  }
+
+  var infoOrd: Vector<tupla<string,int,int>> // Array<Planta, usos, stock>
+  infoOrd := new Array[u.tamano]
+  var t: tupla<string,int,int>
+
+  i = 0
+  var it: Iterador
+  it := stockDicc.iterador() // O(1)
+  var plantaStock: tupla<string,int>
+
+  while (it.haySiguiente()) { // O(h)
+    plantaStock := it.siguiente() // O(1)
+    t = <plantaStock[0], u.obtener(plantaStock[0]), plantaStock[1]> // O(1)
+    infoOrd[i] = T 
+    i++
+  }
+
+  mergeSort(infoOrd) // O(h log h)
+  // Ordeno en de forma decreciente segun usos y desempato en forma creciente segun stock
+
+  var infoVector: Vector<tupla<string,int,int>>
+  i = 0
+  while (i < infoOrd.lenth) {
+    infoVector.agregarAtras(infoOrd[i])
+    i++
+  }
+
+  return infoVector
+
+  // O(n + h log h)
+}
+
+
+// Ejercicio 19
+
+proc OrdenarSegunCriterio(in s: Array<int>, in crit: Array<int>): Array<int> {
+  // Quiero O(n log n)
+  var diccCrit: DiccionarioLog<int, int>
+  diccCrit = diccCrit.diccionarioVacio()
+
+  var i: int
+  i = 0
+  while (i < crit.length) {
+    diccCrit.definir(crit[i],1)
+    i++
+  }
+
+  var A: ListaEnlazada<int>
+  var B: ListaEnlazada<int>
+  A = new listaVacia()
+  B = new listaVacia()
+
+  i = 0
+  while (i < s.length) {
+    if (diccCrit.esta(s[i])) {
+      A.agregarAtras(s[i])
+    } else {
+      B.agregarAtras(s[i])
+    }
+    i++
+  }
+
+  var res: Array<int>
+  res = new Array[A.longitud + B.longitud]
+
+  i = 0
+  var it: Iterador
+  it = A.iterador() 
+  while (it.haySiguiente()) {
+    res[i] = it.siguiente()
+    i++
+  }
+
+  it = B.iterador() 
+  while (it.haySiguiente()) {
+    res[i] = it.siguiente()
+    i++
+  }
+
+}
+
+O(while) = O(guarda) + O(iteraciones)  * (O(guarda) + O(cuerpo))

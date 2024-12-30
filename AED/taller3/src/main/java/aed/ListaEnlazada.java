@@ -1,11 +1,13 @@
 package aed;
 
 public class ListaEnlazada<T> implements Secuencia<T> {
+
     private Nodo primero;
     private Nodo ultimo;
     private int longitud;
 
     private class Nodo {
+
         T valor;
         Nodo sig;
         Nodo prev;
@@ -47,12 +49,12 @@ public class ListaEnlazada<T> implements Secuencia<T> {
         nuevo.prev = ultimo;
         ultimo = nuevo;
         longitud++;
-        }
+    }
 
     public T obtener(int i) {
         Nodo actual = primero;
         int posicion = 0;
-        while(posicion < i) {
+        while (posicion < i) {
             actual = actual.sig;
             posicion++;
         }
@@ -73,7 +75,7 @@ public class ListaEnlazada<T> implements Secuencia<T> {
             ultimo = null;
         } else {
             int posicion = 0;
-            while(posicion < i) {
+            while (posicion < i) {
                 actual = actual.sig;
                 posicion++;
             }
@@ -86,21 +88,21 @@ public class ListaEnlazada<T> implements Secuencia<T> {
     public void modificarPosicion(int indice, T elem) {
         Nodo actual = primero;
         int posicion = 0;
-        while(posicion < indice) {
+        while (posicion < indice) {
             actual = actual.sig;
             posicion++;
-        } 
-        actual.valor = elem; 
+        }
+        actual.valor = elem;
     }
 
     public ListaEnlazada(ListaEnlazada<T> lista) {
         int posicion = 0;
-        while(posicion < lista.longitud()) {
+        while (posicion < lista.longitud()) {
             agregarAtras(lista.obtener(posicion));
             posicion++;
-        } 
+        }
     }
-    
+
     @Override
     public String toString() {
         if (longitud() == 0) {
@@ -108,14 +110,16 @@ public class ListaEnlazada<T> implements Secuencia<T> {
         }
         String res = "[" + obtener(0);
         int posicion = 1;
-        while(posicion < longitud()) {
+        while (posicion < longitud()) {
             res = res + ", " + obtener(posicion);
             posicion++;
-        } res = res + "]";
+        }
+        res = res + "]";
         return res;
     }
 
     private class ListaIterador implements Iterador<T> {
+
         int indice;
 
         ListaIterador() {
@@ -125,7 +129,7 @@ public class ListaEnlazada<T> implements Secuencia<T> {
         public boolean haySiguiente() {
             return indice < longitud;
         }
-        
+
         public boolean hayAnterior() {
             return indice > 0;
         }
@@ -134,7 +138,7 @@ public class ListaEnlazada<T> implements Secuencia<T> {
             T res = obtener(indice);
             indice++;
             return res;
-        }  
+        }
 
         public T anterior() {
             indice--;

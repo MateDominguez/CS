@@ -1,0 +1,97 @@
+// Ej 4.
+Tripla = Tupla<int,int,int>
+
+public class ConjuntoIndexado<Tripla> implements Conjunto<Tupla<Z,Z,Z>>  {
+	Tripla[] datos;
+	int[][] indices;
+
+	buscarPor(in c: ConjuntoIndexado<Tripla>, in index: int) {
+		Tripla[] res = new Tripla[datos.length];
+		int i = 0;
+
+		while(i < indices[index].length){
+			res[i] = indices[index][i];
+			i++;
+		}
+		return res;
+	}
+
+	agregar(inout c: ConjuntoIndexado<Tripla>, in t: Tripla){
+		if (datos == null){
+			int[][] nuevoIndices = new int[3][1];
+			int i = 0;
+			while(i < 3){
+				nuevoIndices[i] = new int[1];
+			}
+		} else {
+			int[][] nuevoIndices = new int[3][datos.length + 1];
+			int i = 0;
+			while(i < 3){
+				nuevoIndices[i] = new int[datos.length + 1];
+			}
+		}
+		
+		i = 0;
+		while(i < 3){
+			int j = 0;
+			while(datos[indices[i][j]] < t[i]){
+				nuevoIndices[i][j] = indices[i][j];
+				j++
+			}
+			nuevoIndices[i][j] = datos.length;
+			while(j < datos.length){
+				nuevoIndices[i][j] = indices[i][j];
+				j++
+			}
+		}
+		indices = nuevoIndices;
+
+		Tripla[] nuevoDatos = new Tripla[datos.length + 1];
+		i = 0;
+		while(i < datos.length){
+			nuevoDatos[i] = datos[i]; 
+			i++;
+		} 
+		nuevoDatos[datos.length] = t;
+	}
+
+	sacar(inout c: ConjuntoIndexado<Tripla>, in t: Tripla){
+		if (pertenece(c,t)) {
+			int[][] nuevoIndices = new int[3][datos.length - 1];
+			int i = 0;
+			while(i < 3){
+				nuevoIndices[i] = new int[datos.length - 1];
+			}
+
+			i = 0;
+			while(i < 3){
+				int j = 0;
+				while(j < datos.length - 1){
+					if (datos[indices[i][j]] != t)
+					nuevoIndices[i][j] = indices[i][j];
+					j++
+				}
+			}
+			indices = nuevoIndices;
+	
+			Tripla[] nuevoDatos = new Tripla[datos.length - 1];
+			i = 0;
+			while(datos[i] != t){
+				nuevoDatos[i] = datos[i];
+				i++; 
+			} 
+			while (i + 1 < datos.length)
+			nuevoDatos[i + 1] = t;
+		}
+	}
+}
+
+pred InvRep(in c: ConjuntoIndexado<Tripla>) {
+	|c.indices| = 3 && (PT i:Z)(0 <= i < 3 ->L |c.indices[i]| = |c.datos|) &&
+	(PT i,j:Z)(0 <= i < 3 && 0 <= j < |c.datos| ->L 0 <= c.index[i][j] < |c.datos|) &&
+	(PT i,j:Z)(0 <= i < 3 && 0 <= j < |c.datos| - 1 ->L c.datos[c.indices[i][j]][i] <= c.datos[c.indices[i][j+1]][i])
+}
+
+pred Abs(in c: ConjuntoIndexado<Tripla>, in c`: Conjunto<Tripla>) {
+	
+}

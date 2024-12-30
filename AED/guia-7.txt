@@ -1,0 +1,441 @@
+Guia 7 - Diseno con estructuras avanzadas
+
+/// Diseno con Arboles Binarios
+// Ejercicio 1 - ArbolBinario
+// 3
+/a
+proc altura(in ab: ArbolBinario<T>): int {
+  if (root == null) {
+    return 0;
+  } else {
+    int leftHeight = altura(root.left);
+    int rightHeight = altura(root.right);
+
+    return 1 + max(leftHeight, rightHeight);
+  }
+}
+
+/b
+proc cantidadHojas(in ab: ArbolBinario<T>): int {
+  if (root == null) {
+    return 0;
+  } else {
+    if (root.left != null) {
+      int hojasIzq = cantidadHojas(root.left);
+    } else {
+      return 1;
+    }
+    if (root.right != null) {
+      int hojasDer = cantidadHojas(root.right);
+    } else {
+      return 1;
+    }
+  } return hojasIzq + hojasDer;
+}
+
+/c
+proc esta(in ab: ArbolBinario<T>, in t: T): bool {
+  if (root == null) {
+    return false;
+  } else {
+    if (root.dato == t) {
+      return true;
+    } else {
+      bool estaIzq  = esta(root.left);
+      bool estaDer = esta(root.right);
+    }
+  }
+  return estaIzq && estaDer;
+}
+
+/d
+proc cantidadApariciones(in ab: ArbolBinario<T>, in t: T): int {
+  if (root == null) {
+    return 0;
+  } else (
+    int cantizq = cantidadApariciones(root.left);
+    int cantDer = cantidadApariciones(root.right);
+
+    if (root.dato == t) {
+      return 1 + cantizq + cantDer;
+    } else {
+      return cantizq + cantDer;
+    }
+  )
+}
+
+//1
+la raiz es el unico nodo sin padre y no hay ciclos.
+
+//2
+pred InvRep(in ab: ArbolBinario<T>) {
+  noHayCiclos(ab) && raizSinPadre(ab)
+}
+
+// Ejercicio 2 - ABB
+
+// Mejor caso, es el primer elemento, O(1)
+// Peor caso, no esta el elemento, O(h), h altura del arbol
+
+proc esta(in ab: ABB<T>, in t: T): bool {
+  if (ab.root == null) {
+    return false;
+  }
+  if (ab.dato == t) {
+    return true;
+  }
+  if (t < ab.dato) {
+    return esta(ab.left);
+  } else {
+    return esta(ab.right);
+  }
+}
+
+// Mejor caso y peor caso son iguales, sin importar la cant de apariciones tiene que 
+// recorrer todo el arbol, O(n)
+
+proc cantidadApariciones(in ab: ABB<T>, in t: T): int {
+  if (ab.root == null) {
+    return 0;
+  }
+  int aparicionesIzq = cantidadApariciones(ab.left);
+  int aparicionesDer = cantidadApariciones(ab.right);
+
+  if (ab.root.dato == t) {
+    return 1 + aparicionesIzq + aparicionesDer;
+  }
+  return aparicionesIzq + aparicionesDer;
+}
+
+
+// Mejor caso, el ABB esta vacio O(1)
+// Peor caso, recorre la rama mas larga O(log n)
+
+proc insertar(inout ab: ABB<T>, in t: T) {
+  if (ab.root == null) {
+    ab.root = new Nodo;
+  } else {
+    insertarAux(ab.root, t)
+  }
+}
+
+proc insertarAux(inout nodo: Nodo, in t: T) {
+  if (t < nodo.valor && nodo.left == null) {
+    nodo.left = new Nodo;
+    nodo.left.valor = t;
+  } else if (t < nodo.valor && nodo.left != null) {
+    insertarAux(nodo.left, t);
+  }
+  if (t > nodo.valor && nodo.right == null) {
+    nodo.right = new Nodo;
+    nodo.right.valor = t;
+  } else if (t > nodo.valor && nodo.right != null) {
+    insertarAux(nodo.right, t);
+  }
+}
+// no lo termine
+
+// Ejercicio 4 - Conjunto sobre ABB
+
+/ 1
+// Mejor caso = peor caso, tengo que recorrer todo el ABB, O(n)
+
+proc cantElementosEnRango(in c: ConjABB<int>, in desde: int, in hasta: int): int {
+  return cantElementosEnRangoAux(c.root);
+}
+
+proc cantElementosEnRangoAux(in nodo: Nodo, in desde: int, in hasta: int): int {
+  if (nodo == null) {
+    return 0;
+  }
+  int cantElemIzq = cantElementosEnRango(nodo.left);
+  int cantElemDer = cantElementosEnRango(nodo.right);
+
+  if (nodo.valor >= desde && nodo.valor <= hasta) {
+    return 1 + cantElemIzq + cantElemDer;
+  } else {
+    return cantElemIzq + cantElemDer;
+  }
+}
+
+/ 2
+Modulo ConjAVL<int> implementa Conjunto<Z>
+  var elems: AVL<int>;
+
+proc cantElementosEnRango(in c: ConjAVL<T>, in desde: int, in hasta: int) {
+  Nodo actual = c.root;
+  while (actual < desde) {
+    actual = actual.right;
+  }
+  return 1 + cantElementosEnRangoAux(actual.right, desde, hasta);
+}
+
+proc cantElementosEnRangoAux(in nodo: Nodo, in desde: int, in hasta: int): int {
+  int cantElemsIzq = cantElementosEnRangoAux(nodo.left, desde, hasta);
+  int cantElemDer = cantElementosEnRangoAux(nodo.right, desde, hasta);
+}
+/ no lo termine, esta en el campus
+
+/ 3
+pred InvRep(in c: ConjAVL<int>) {
+  estaBalanceado(c) && noHayCiclos(c) && noHayRepetidos(c) && maxDosHijos(c)
+}
+
+pred Abs(in c: ConjAVL<int>, in c': Conjunto<Z>) {
+  (PT i: Z)(c.esta(i) sii i pertenece c')
+}
+
+/// Diseno con Heaps
+// Ejercicio 5 - AB
+
+proc esMaxHeap(in ab: ABB): bool {
+  return esMaxHeapAux(ab.root);
+}
+
+proc esMaxHeapAux(in nodo: Nodo): bool {
+  bool esMaxIzq = true;
+  bool esMaxDer = true;
+
+  if (nodo == null) {
+    return true;
+  }
+
+  if (nodo.left != null) {
+    if (nodo.left.valor <= nodo.valor) {
+      esMaxIzq = esMaxHeapAux(nodo.left);
+    } else {
+      return false;
+    }
+  }
+
+  if (nodo.right != null) {
+    if (nodo.right.valor <= nodo.valor) {
+      esMaxDer = esMaxHeapAux(nodo.right);
+    } else {
+      return false;
+    }
+  }
+
+  return esMaxIzq && esMaxDer;
+}
+
+// Ejercicio 6
+/1
+Modulo ArrayHeap<T> implementa ColaDePrioridad<T>
+  var elems: T[];
+  var canElems: int;
+
+TAD ColaDePrioridad<T> 
+  obs d: dict<T,R>
+
+pred InvRep(in heap: ArrayHeap<T>) {
+  elems.lenth == cantElems &&_L (PT i: Z)(o <= i < cantElems/2 -->L elems[2*i] <= elems[i]) 
+  && (PT i: Z)(o <= i < cantElems/2 && 2*i+1 < cantElems -->L elems[2*i+1] <= elems[i])
+}
+
+// Ejercicio 8
+proc ordenarSec(in sec: T[]): T[] {
+  T[] res = T[sec.lenth];
+  Heap heap = New Heap;
+  for (int i = 0; i < sec.lenth; i++) {
+    heap.agregar(T[i]);
+  }
+  for(int i = 0; i < heap.cantElems) {
+    res[i] = heap.desencolarMax();
+  }
+  return res;
+}
+
+/// Diseno con Tries
+// Ejercicio 10 - Trie, nodos listaEnlazada
+
+InvRep: No hay ciclos, cada nodo tiene un solo padre excepto la raiz, la raiz no tiene 
+padre. Si un nodo tiene clave, se llega a este solo a traves de los nodos que componen
+la clave. Todas las hojas tienen una clave asociada. El tamano es igual a la cantidad
+de claves
+
+Modulo Trie<T>
+  var raiz: Nodo;
+  var tamano: int;
+
+Nodo<T> es Struct {
+  valor: LetraValor<T>;
+  alfabeto: listaEnlazada<Nodo>;
+
+  LetraValor<T> es Struct {
+    letra: T;
+    val: T;
+  }
+}
+
+// asumo que la key esta definida en el Trie
+proc buscar(in trie: Trie, in key: T[]): T {
+  int i = 0;
+  Nodo actual = trie.raiz;
+  while (i < key.lenth) {
+    Iterador it = actual.alfabeto.iterador();
+    bool encontrado = false;
+    while (it.haySiguiente && !encontrado) {
+      actual = it.siguiente;
+      if (actual.valor.letra == key[i]) {
+        encontrado = true;
+      }
+    }
+    i++;
+  } return actual.valor.val;
+}
+
+pred agregar(inout trie: Trie, in key: T[], in valor: T) {
+  int i = 0;
+  Nodo actual = trie.raiz;
+  bool finPalabra = false;
+  while (i < key.lenth && !finPalabra) {
+    Iterador it = actual.alfabeto.iterador();
+    finPalabra = True;
+    bool encontrado = false;
+    while (it.haySiguiente && !encontrado) {
+      actual = it.siguiente;
+      if (actual.valor.letra == key[i]) {
+        encontrado = true;
+        finPalabra = False;
+        i++;
+      }
+    }
+  } i++;
+  Nodo siguiente;
+  while (i < key.lenth - 1) {
+    siguiente = new Nodo;
+    siguiente.valor.letra = key[i];
+    actual.alfabeto.agregarAtras(siguiente);
+    actual = siguiente;
+    i++
+  }
+  siguiente = new Nodo;
+  siguiente.valor.letra = key[i];
+  siguiente.valor.val = valor;
+  actual.alfabeto.agregarAtras(siguiente); 
+}
+
+El Trie implementado con array sirve cuando el tamano del alfabeto es relativamente
+pequeno. El trie implementado con listaEnlazada es mejor cuando el tamano del alfabeto
+es mas grande.
+
+// Ejercicio 11 - Trie con array
+Supongo que las palabras estan en minuscula y usan el alfabeto ingles
+
+Modulo Trie
+  Nodo raiz;
+  int tamano;
+
+Nodo es Struct {
+  char[] palabra;
+  Nodo[] alfabeto;
+}
+
+/ 1
+asumo 0 <= char <= 26
+proc primeraPalabra(in trie: Trie): Vector<char> {
+  if (tamano == 0) {
+    return new Vector<char>;
+  }
+  Vector res = new Vector<char>;  
+  Nodo actual = trie.raiz; 
+  while (actual.valor == null) {
+    int i = 0;
+    bool encontroLetra = false;
+    while (i < actual.alfabeto.lenth && !encontroLetra) {
+      if (actual.alfabeto[i] != null) {
+        encontroLetra = true;
+        actual = actual.alfabeto[i]
+        res.agregarAtras(i);
+      }
+      i++;
+    }
+  } return res;
+}
+
+/ 2
+proc ultimaPalabra(in trie: Trie): Vector<char> {
+  if (tamano == 0) {
+    return new Vector<char>;
+  }
+  Vector res = new Vector;  
+  Nodo actual = trie.raiz; 
+  while (actual.valor == null) {
+    int i = actual.alfabeto.lenth - 1;
+    bool encontroLetra = false;
+    while (i >= 0 && !encontroLetra) {
+      if (actual.alfabeto[i] != null) {
+        encontroLetra = true;
+        actual = actual.alfabeto[i]
+        res.agregarAtras(i);
+      }
+      i--;
+    }
+  } return res;
+}
+
+/ 3
+supongo que p1 < p2, en cada nodo donde hay una palabra, su valor es la palabra
+proc buscarIntervalo(in trie: Trie, in p1: char[], in p2: char[]): Vector<Vector<char>> {
+  Vector res = new Vector;
+  Nodo actual = trie.raiz;
+
+  while (actual.valor == null || actual.valor < p2) {
+    int i = 0;
+    bool encontroLetra = false;
+    while (i <= p2[i] && !encontroLetra) {
+      if (actual.alfabeto[i] != null && i >= p1[i]) {
+        encontroLetra = true;
+        actual = actual.alfabeto[i]
+        res.agregarAtras(i);
+      }
+      i--;
+    }
+  } return res;
+}
+
+// Ejercicio 12
+
+Modulo Trie
+  Nodo raiz;
+  int tamano;
+
+Nodo es Struct {
+  char[] palabra;
+  Nodo[] alfabeto;
+}
+
+proc matrizBinaria(in matriz: int[][]): ListaEnlazada<Integer> {
+  ListaEnlazada<Integer> res = new ListaEnlazada;
+  Trie<int> trie = new Trie;
+  int i = 0;
+  while (i < matriz.lenth) {
+    if (pertenece(trie, matriz[i])) {
+      res.agregarAtras(i);
+    } else {
+      Trie.agregar(trie, matriz[i], matriz[i]);
+    }
+  }
+  return res;
+}
+
+proc pertenece(in trie: Trie, in key: T[]): bool {
+  int i = 0;
+  bool res = false;
+  Nodo actual = trie.raiz;
+  while (i < key.lenth && !finPalabra) {
+    Iterador it = actual.alfabeto.iterador();
+    finPalabra = True;
+    bool encontrado = false;
+    while (it.haySiguiente && !encontrado) {
+      actual = it.siguiente;
+      if (actual.valor.letra == key[i]) {
+        encontrado = true;
+        finPalabra = False;
+      }
+    }
+    i++;
+  } return i == key.lenth - 1;
+}
+
