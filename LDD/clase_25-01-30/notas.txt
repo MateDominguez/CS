@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jan 30 11:12:33 2025
+
+@author: mateo
+"""
+
+# Ver actividad n1 campus
+Modelo Entidad Relacion
+
+Paso 1 - Identificar clases
+
+Entidades: alumnos, profesores, materia
+
+Paso 2 - Identificar atributos
+
+Cada clase tiene atributos que lo representan
+Estuiante: nombre completo, LU, email, fecha de nacimiento
+Profesor: nombre completo, Legajo, email, fecha de nacimiento, dedicacion
+materia: codigo, nombre
+
+tipos de atributos:
+- simples: propiedaes atomicas.
+- compuestos: se pueen descomponer en otros atributos. No deberian guardatrrse en la base de datos fisica, puede generarse en vistas.
+- derivados: se pueden computar a oartur de otros atributos. No deberian guardarse en la base de datos fisica.
+- multivaluados: pueden tener mas de un valor a la vez.
+
+Paso 3 - Identificar claves
+
+Paso 4 - Identificar las relaciones
+las relaciones pueden tener atributos
+
+Paso 5 - Identificar las cardinalidades
