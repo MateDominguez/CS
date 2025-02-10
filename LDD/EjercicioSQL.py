@@ -465,9 +465,12 @@ deptosProvincia = dd.sql("""
                INNER JOIN provincia AS p
                ON d.id_provincia = p.id 
               """).df()
+
+
+
               
 deptosProvinciaCasos = dd.sql("""
-               SELECT DISTINCT dp.depto, dp.provincia, c.anio, c.id, c.id_tipoevento, c.semana_epidemiologica, c.id_grupoetario, c.cantidad
+               SELECT DISTINCT dp.depto, dp.id_depto, dp.provincia, c.anio, c.id, c.id_tipoevento, c.semana_epidemiologica, c.id_grupoetario, c.cantidad
                FROM casos AS c
                INNER JOIN deptosProvincia AS dp
                ON c.id_depto = dp.id_depto
@@ -475,12 +478,14 @@ deptosProvinciaCasos = dd.sql("""
 
               
 consultaSQL = """
-               SELECT DISTINCT depto, provincia, AVG(cantidad) AS cantCasosProm
+               SELECT DISTINCT dpc.depto, dpc.provincia, AVG(c.cantidad) AS cantCasosProm
                FROM deptosProvinciaCasos AS dpc
+               INNER JOIN casos AS c
+               ON dpc.id_depto = c.id_depto
                WHERE dpc.anio = 2019 
-                   OR dpc.anio = 2020
-               GROUP BY depto, provincia
-               ORDER BY provincia, depto
+                   AND c.anio = 2020
+               GROUP BY dpc.depto, dpc.provincia
+               ORDER BY dpc.provincia ASC, dpc.depto ASC
               """               
 
 dataframeResultado = dd.sql(consultaSQL).df() 
@@ -872,21 +877,56 @@ info_obtenida = dd.sql("""
 consultaSQL = """
                 SELECT DISTINCT i1.*
                 FROM info_obtenida AS i1
-                # WHERE i1.cantidad = (
-                #     SELECT MAX(cge2.cantidad)
-                #     FROM info_obtenida AS io2
-                #     )
+                WHERE i1.cantidad = (
+                     SELECT MAX(io2.cantidad)
+                     FROM info_obtenida AS io2
+                     )
               """              
                
 dataframeResultado = dd.sql(consultaSQL).df()
-# WHERE cge.cantidad = (
-#     SELECT MAX(cge2.cantidad)
-#     FROM casosGrupoEtario AS cge2
-#     )
+
 #%%===========================================================================
 #J. Reemplazos
 # %%
 #a. Listar los id y descripción de los departamentos. Estos últimos sin tildes y en orden alfabético.
+
+consultaSQL = """
+                SELECT id, 
+                    REPLACE(
+                        REPLACE(
+                            REPLACE(
+                                REPLACE(
+                                    REPLACE(
+                                        REPLACE(
+                                            REPLACE(
+                                                REPLACE(
+                                                    REPLACE(
+                                                        REPLACE(descripcion, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'Á', 'A'), 'É', 'E'), 'Í', 'I'), 'Ó', 'O'), 'Ú', 'U') AS descSinTildes
+                FROM departamento
+                ORDER BY descripcion
+              """              
+               
+dataframeResultado = dd.sql(consultaSQL).df()
+
 # %%
 #b. Listar los nombres de provincia en mayúscula, sin tildes y en orden alfabético
+
+consultaSQL = """
+                SELECT UPPER(
+                            REPLACE(
+                                REPLACE(
+                                    REPLACE(
+                                        REPLACE(
+                                            REPLACE(
+                                                REPLACE(
+                                                    REPLACE(
+                                                        REPLACE(
+                                                            REPLACE(
+                                                                REPLACE(descripcion, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'Á', 'A'), 'É', 'E'), 'Í', 'I'), 'Ó', 'O'), 'Ú', 'U')) AS provSinTildeMayus
+                FROM departamento
+                ORDER BY descripcion
+              """              
+               
+dataframeResultado = dd.sql(consultaSQL).df()
+
 
